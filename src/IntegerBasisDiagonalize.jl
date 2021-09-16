@@ -26,9 +26,10 @@ export
 
     Translational_Symmetry_Reflection_Cycles_gs,
     sparse_Block_Diagonal_Hamiltonian_q0R1_gs,
+    sparse_Block_Diagonal_Hamiltonian_q0R1_gs_Rest,
     Symmetry_Reflection_Cycles_gs,
-    spatial_entropy_op_Ts_gs,
-    spatial_entropy_op_Ts_gs_scaling,
+    spatial_entropy_acc_gs,
+    spatial_entropy_acc_gs_Rest,
     particle_entropy
 
 include("utilities.jl")

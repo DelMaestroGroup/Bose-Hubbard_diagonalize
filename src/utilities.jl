@@ -147,50 +147,12 @@ end
 # The function occupationShift might exist at some point, which would
 # be a more generalized version of this. Doesn't change U, bc whatever. Not well documented.
 "Shift the function to the right once, used in translational_symmetry.jl"
-#function shiftVector(v::Int, U::Array)
-#    oldU = copy(U)
-#    for i = 1:(oldU[1]-1)
-#        v = hopLeft(v, U, 1)
-#    end
-#    for i = 2:length(oldU)
-#        for j = 1:(oldU[i]-oldU[i-1]-1)
-#            v = hopLeft(v, U, i)
-#        end
-#    end
-#    v
-#end
-#shiftVector(v::Int)  = shiftVector(v, generateU(v))
-#function shiftVector(v::Int, i::Int)
-#    U = generateU(v)
-#    for i = 1:i
-#        v = shiftVector(v, U)
-#    end
-#    v
-#end
 
 
 function shiftV(v::Int,k::Int64)
     v >>>= trailing_zeros(v) + 1
     return SetToOne(v,k)
 end
-
-#function shiftV(v::Int,L::Int64,N::Int64)
-#    v=~v
-#    one=1
-#    for bit=1:N
-#       one= v&one
-#       v >>>= one       
-#    end
-#    v=~v
-#    v >>>= 1
-#    return SetToOne(v,L+N)
-#end
-
-#function shiftV(v::Int,M::Int64,k::Int64)
-#    v >>>= (k + 1)
-#    return SetToOne(v,M)
-#end
-
 
 function serial_num_fast(basis:: AbstractIntbasis, v::Int)
         Max_Index=basis.D+1
@@ -209,15 +171,6 @@ function serial_num_fast(basis:: AbstractIntbasis, v::Int)
         end
 	Index
 end
-
-
-
-
-
-
-
-
-
 
 """
 	reverseBasis(v::Int, U::Array{Int64,N} where N, L::Int64)
@@ -290,18 +243,6 @@ function generateN(U::Array{Int})
 	N
 end
 
-#function getNvector(v::Int,L::Int64,N::Int64)
-#	Nvector = zeros(Int,L)
-#        site=1
-#        for i=1:L+N-1
-#           Ni=v&1
-#           site +=Ni
-#           Nvector[site] +=~Ni&1
-#           v >>>= 1
-#	end
-#	Nvector
-#end
-
 """
 	countN(v::Int)
 
@@ -335,4 +276,3 @@ function subregion(v::Int, A::Array)
 	v <<= leading_zeros(v)
 	v  >>> trailing_zeros(v) << x
 end
-# may eventually want to do this for nonconsecutive sites

@@ -1,5 +1,5 @@
 """
-Create a list of occupation basis for each translational and reflection symmetry cycle for bosonic 1D chains with PBC.
+Create a list of occupation basis for reflection symmetry cycle for bosonic 1D chains with PBC.
 """
 function Symmetry_Reflection_Cycles_gs(basis::AbstractIntbasis)
 

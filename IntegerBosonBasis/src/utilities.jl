@@ -61,12 +61,14 @@ function getNvector(v::Int,L::Int64,N::Int64)
 	Nvector
 end
 
+
 """
 	serial_num(L::Int64, N::Int64, v::Int64)
 
 Compute the serial number of occupation vector `v` in a basis with `L` sites
 and `N` particles.
 """
+
 
 function serial_num_fast(basis:: AbstractIntbasis, v::Int)
         Max_Index=basis.D+1
@@ -86,6 +88,12 @@ function serial_num_fast(basis:: AbstractIntbasis, v::Int)
         end
 	Index
 end
+
+
+
+
+
+
 
 """
 	checkSite(v::Int, U::Array, site::Int64)
@@ -211,4 +219,53 @@ function printV(v::Int)
 	println("┘")
 	
 	nothing
+end
+##############################
+#############################
+function U_to_Nv(Nv::Vector{Int64},U::Vector{Int64},L::Int64)
+    Nv[1]=U[1]-1
+    @inbounds for i= 2 : L
+        Nv[i]=U[i]-U[i-1]-1
+    end   
+end
+
+
+function buildLookupTable()
+    TableSize=2^16    
+    LookupTable=zeros(Int128,TableSize) 
+    site_indexes=zeros(Int8,16)
+    NumOnes=zeros(Int8,TableSize)
+    for i=1:TableSize
+        vi=i-1
+        NOnes=count_ones(vi)
+        NumOnes[i]=NOnes
+        site_index=0
+        site_indexes[:].=0
+
+        for ones_counter=1:NOnes
+            tzs=trailing_zeros(vi)+1
+            vi >>>=tzs
+            site_index+=tzs
+            site_indexes[ones_counter]=site_index
+        end
+       LookupTable[i]= reinterpret(Int128,site_indexes)[1]
+    end      
+    return LookupTable,NumOnes
+end
+
+function getU(v::Int64,L::Int64,LookupTable::Vector{Int128},Ones::Vector{Int8},U::Vector{Int64})
+    site_index=0
+    shift=0
+     @inbounds for subket_index=1:4
+        subket=v & 65535
+        Uint=LookupTable[subket+1]
+        v >>>=16
+        @inbounds for i=1:Ones[subket+1]
+           SubU= Uint&255
+           site_index+=1
+            U[site_index]=SubU+shift
+            Uint >>>=8
+        end
+        shift+=16
+    end
 end

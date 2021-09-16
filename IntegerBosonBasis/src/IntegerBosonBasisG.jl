@@ -13,7 +13,10 @@ export
     countParticles,
     SzToInt,
     printV,
-    getNvector
+    getNvector,
+    getU,
+    buildLookupTable,
+    U_to_Nv
 include("basis.jl")
 include("utilities.jl")
 include("iteration.jl")

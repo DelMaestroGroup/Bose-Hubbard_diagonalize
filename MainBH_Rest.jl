@@ -1,6 +1,6 @@
 push!(LOAD_PATH, joinpath(dirname(@__FILE__), "src"))
 push!(LOAD_PATH, joinpath(dirname(@__FILE__), "IntegerBosonBasis/src"))
-using IntegerBasisDiagonalize_Rest
+using IntegerBasisDiagonalize
 using IntegerBosonBasisG
 using Serialization
 using ArgParse
@@ -95,59 +95,15 @@ function main()
     UM=U_range[length(U_range)]
     NumU=length(U_range)
     println(" L=$(L), N=$(N), ℓ=$(A), T=$(T), U_min=$(U0), U_min=$(UM), u_num=$(NumU), sym gs, n_max=$(n_max)")
-
-
-
-
-
+ 
     if isnothing(output) 
         output = (@sprintf "spatEE_gs_%02d_%02d_%02d_%02d_%+5.3f_%+5.3f_%003d.dat" n_max L N A U0 UM NumU)
     end
-    outputPn = (@sprintf "spatEE_gs_Pn_%02d_%02d_%02d_%02d_%+5.3f_%+5.3f_%003d.dat" n_max L N A U0 UM NumU)
-    outputS1 = (@sprintf "spatEE_gs_S1_%02d_%02d_%02d_%02d_%+5.3f_%+5.3f_%003d.dat" n_max L N A U0 UM NumU)
-    outputS2 = (@sprintf "spatEE_gs_S2_%02d_%02d_%02d_%02d_%+5.3f_%+5.3f_%003d.dat" n_max L N A U0 UM NumU)
-    outputSNeg = (@sprintf "spatEE_gs_SNeg_%02d_%02d_%02d_%02d_%+5.3f_%+5.3f_%003d.dat" n_max L N A U0 UM NumU)
 
     f = open(output, "w")
-    fPn = open(outputPn, "w")
-    fS1 = open(outputS1, "w")
-    fS2 = open(outputS2, "w")
-    fSNeg = open(outputSNeg, "w")
 
     write(f, "# L=$(L), N=$(N), T=$(T), sym gs, n_max=$(n_max)\n")
     write(f,@sprintf "#%11s%11s%24s%24s%24s%24s%24s%24s\n" "U" "Eg" "S₁(ℓ=$(A))" "S₁acc(ℓ=$(A))" "S₂(ℓ=$(A))" "S₂acc(ℓ=$(A))" "EN(ℓ=$(A))" "ENacc(ℓ=$(A))")
-
-    write(fPn, "# L=$(L), N=$(N), T=$(T), ℓ=$(A), sym gs, n_max=$(n_max)\n")
-    write(fPn, "# Pn\n")
-    write(fPn,@sprintf "#%11s" "U")
-    for i=0:N
-        write(fPn,@sprintf "%24s" "n=$(i)")
-    end    
-    write(fPn, "\n")
-
-    write(fS1, "# L=$(L), N=$(N), T=$(T), ℓ=$(A), sym gs, n_max=$(n_max)\n")
-    write(fS1, "# S1\n")
-    write(fS1,@sprintf "#%11s" "U")
-    for i=0:N
-        write(fS1,@sprintf "%24s" "n=$(i)")
-    end    
-    write(fS1, "\n")
-
-    write(fS2, "# L=$(L), N=$(N), T=$(T), ℓ=$(A), sym gs, n_max=$(n_max)\n")
-    write(fS2, "# S2\n")
-    write(fS2,@sprintf "#%11s" "U")
-    for i=0:N
-        write(fS2,@sprintf "%24s" "n=$(i)")
-    end    
-    write(fS2, "\n")
-
-    write(fSNeg, "# L=$(L), N=$(N), T=$(T), ℓ=$(A), sym gs, n_max=$(n_max)\n")
-    write(fSNeg, "# SNeg\n")
-    write(fSNeg,@sprintf "#%11s" "U")
-    for i=0:N
-        write(fSNeg,@sprintf "%24s" "n=$(i)")
-    end    
-    write(fSNeg, "\n")
 
 
 
@@ -173,46 +129,12 @@ function main()
         for k=1:length(d)
             Ψ[k]=Real(d[k])
         end
-        S1_sp,S1_acc,S2_sp,S2_acc,Neg,Neg_acc,Pn,S1,S2,SNeg = spatial_entropy_op_Ts_gs_Rest(basis,A,d, CycleSize,InvCycles_Id)
+        S1_sp,S1_acc,S2_sp,S2_acc,Neg,Neg_acc = spatial_entropy_acc_gs_Rest(basis,A,d, CycleSize,InvCycles_Id)
         println("     Entanglement calculated, for U=$(U)")
         write(f, @sprintf "%12.6f%24.12E%24.12E%24.12E%24.12E%24.12E%24.12E%24.12E\n" U Eg S1_sp S1_acc S2_sp S2_acc Neg Neg_acc)
         flush(f)
 
-        write(fPn,@sprintf "%12.6f" U)
-        for i=1:N+1
-            write(fPn,@sprintf "%24.12E" Pn[i])
-        end    
-        write(fPn, "\n")
-        flush(fPn)
-
-        write(fS1,@sprintf "%12.6f" U)
-        for i=1:N+1
-            write(fS1,@sprintf "%24.12E" S1[i])
-        end    
-        write(fS1, "\n")
-        flush(fS1)
-
-        write(fS2,@sprintf "%12.6f" U)
-        for i=1:N+1
-            write(fS2,@sprintf "%24.12E" S2[i])
-        end    
-        write(fS2, "\n")
-        flush(fS2)
-
-        write(fSNeg,@sprintf "%12.6f" U)
-        for i=1:N+1
-            write(fSNeg,@sprintf "%24.12E" SNeg[i])
-        end    
-        write(fSNeg, "\n")
-        flush(fSNeg)
-
-
     end
-    close(f)
-    close(fPn)
-    close(fS1)
-    close(fS2)
-    close(fSNeg)
 
 end
 

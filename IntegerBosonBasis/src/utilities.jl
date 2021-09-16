@@ -61,51 +61,12 @@ function getNvector(v::Int,L::Int64,N::Int64)
 	Nvector
 end
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 """
 	serial_num(L::Int64, N::Int64, v::Int64)
 
 Compute the serial number of occupation vector `v` in a basis with `L` sites
 and `N` particles.
 """
-
-#function serial_num(L::Int, N::Int, v::Int)
-#    I = 1
-#
-#	for mu = 1:L
-#		s = 0
-#		for nu = (mu+1):L
-#			s += countParticles(v, nu)
-#		end
-#		for i = 0:(countParticles(v, mu) - 1)
-#			I += num_vectors(N-s-i, mu-1)
-#		end
-#	end
-#
-#	I
-#end
-#serial_num(basis::Intbasis, v::Int64) = serial_num(basis.L, basis.N, v)
-
-
-
 
 function serial_num_fast(basis:: AbstractIntbasis, v::Int)
         Max_Index=basis.D+1
@@ -125,12 +86,6 @@ function serial_num_fast(basis:: AbstractIntbasis, v::Int)
         end
 	Index
 end
-
-
-
-
-
-
 
 """
 	checkSite(v::Int, U::Array, site::Int64)

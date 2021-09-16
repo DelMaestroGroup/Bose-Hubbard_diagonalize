@@ -1,4 +1,6 @@
 # Bose-Hubbard_diagonalize
+A Julia exact diagonalization code for the Bose–Hubbard model of interacting bosons in one spatial dimension with a focus on entanglement measures.
+
 ## Examples
 
 * `julia MainBH.jl --help`

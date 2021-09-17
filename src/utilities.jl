@@ -107,7 +107,7 @@ left shifted to the desired position. `|` combines the two, and U is updated to
 decrement all indices to the left of the destroyed particle.
 """
 function destroyParticle(v::Int, U::Array{Int}, site::Int)
-	checkSite(v, U, site) == 1 || error("No particle found on site ", site)
+	#checkSite(v, U, site) == 1 || error("No particle found on site ", site)
 
 	@inbounds for i = site:length(U)
 		U[i] -= 1
@@ -147,12 +147,50 @@ end
 # The function occupationShift might exist at some point, which would
 # be a more generalized version of this. Doesn't change U, bc whatever. Not well documented.
 "Shift the function to the right once, used in translational_symmetry.jl"
+#function shiftVector(v::Int, U::Array)
+#    oldU = copy(U)
+#    for i = 1:(oldU[1]-1)
+#        v = hopLeft(v, U, 1)
+#    end
+#    for i = 2:length(oldU)
+#        for j = 1:(oldU[i]-oldU[i-1]-1)
+#            v = hopLeft(v, U, i)
+#        end
+#    end
+#    v
+#end
+#shiftVector(v::Int)  = shiftVector(v, generateU(v))
+#function shiftVector(v::Int, i::Int)
+#    U = generateU(v)
+#    for i = 1:i
+#        v = shiftVector(v, U)
+#    end
+#    v
+#end
 
 
 function shiftV(v::Int,k::Int64)
     v >>>= trailing_zeros(v) + 1
     return SetToOne(v,k)
 end
+
+#function shiftV(v::Int,L::Int64,N::Int64)
+#    v=~v
+#    one=1
+#    for bit=1:N
+#       one= v&one
+#       v >>>= one       
+#    end
+#    v=~v
+#    v >>>= 1
+#    return SetToOne(v,L+N)
+#end
+
+#function shiftV(v::Int,M::Int64,k::Int64)
+#    v >>>= (k + 1)
+#    return SetToOne(v,M)
+#end
+
 
 function serial_num_fast(basis:: AbstractIntbasis, v::Int)
         Max_Index=basis.D+1
@@ -171,6 +209,55 @@ function serial_num_fast(basis:: AbstractIntbasis, v::Int)
         end
 	Index
 end
+
+function serial_num_Cycles(Cycles_leaders::Array{Int,1}, NumOfCycles::Int, v::Int)
+        Max_Index= NumOfCycles+1
+        Min_Index=1
+        is_not_found=true
+        Index=1
+        while is_not_found
+            Index= (Max_Index+ Min_Index)÷ 2
+            if Cycles_leaders[Index]>v
+                Min_Index=Index
+            elseif Cycles_leaders[Index]<v
+                Max_Index=Index
+            else 
+                is_not_found=false
+            end
+        end
+	Index
+end
+
+
+
+
+function serial_num_Cycles_OTF(Cycles_leaders::Array{Int,1}, NumOfCycles::Int, v::Int)
+        Max_Index= NumOfCycles+1
+        Min_Index=1
+        is_not_found=true
+        if  v==1
+                is_not_found=false
+
+        end 
+
+        Index=1
+        while is_not_found
+            Index= (Max_Index+ Min_Index)÷ 2
+            if Cycles_leaders[Index]<v
+                Min_Index=Index
+            elseif Cycles_leaders[Index]>v
+                Max_Index=Index
+            else 
+                is_not_found=false
+            end
+        end
+	Index
+end
+
+
+
+
+
 
 """
 	reverseBasis(v::Int, U::Array{Int64,N} where N, L::Int64)
@@ -243,6 +330,18 @@ function generateN(U::Array{Int})
 	N
 end
 
+#function getNvector(v::Int,L::Int64,N::Int64)
+#	Nvector = zeros(Int,L)
+#        site=1
+#        for i=1:L+N-1
+#           Ni=v&1
+#           site +=Ni
+#           Nvector[site] +=~Ni&1
+#           v >>>= 1
+#	end
+#	Nvector
+#end
+
 """
 	countN(v::Int)
 
@@ -276,3 +375,123 @@ function subregion(v::Int, A::Array)
 	v <<= leading_zeros(v)
 	v  >>> trailing_zeros(v) << x
 end
+# may eventually want to do this for nonconsecutive sites
+
+
+
+
+#original from A. V. Ponomarev (2009)
+#subroutine buildpascal
+function buildpascal(lc::Int,nc::Int)
+#c lc=number of sites +1
+#c nc=number of atoms +1
+    jbc=Float64   
+    cnkc=zeros(Int,lc,nc)    
+    jmaxnc=Int
+#c builds the rotated pascal triangle
+
+    for i = 1:lc
+        cnkc[i,1] = 1
+    end
+    for i = 1:lc
+        for j = 2:nc
+            cnkc[i,j] = 0
+        end 
+    end 
+    for in1 = 2:lc
+        cnkc[in1,2] = sum(cnkc[in1-1,1:2])
+        if nc-1>1 
+            for in2 = 1:nc
+                cnkc[in1,in2] = sum(cnkc[in1-1,1:in2])
+            end 
+        end
+    end
+    jmax = cnkc[lc,nc]
+    return cnkc,jmax
+end
+
+#c ---------------------------------------------
+#c Returns the many body state bi at position in
+#c ---------------------------------------------
+#c original from A. V. Ponomarev (2009)
+#subroutine in2b(in,bi)
+function in2b(inn::Int64,cnkc::Array{Int64,2},jmax::Int64,lc::Int64,nc::Int64,bi::Vector{Int64})
+    bi.=0 
+    indi = inn-1
+    ind_L = lc-1
+    ind_N = nc
+    while ind_N != 1
+        if indi >= cnkc[ind_L,ind_N] 
+            indi -= cnkc[ind_L,ind_N]
+            bi[lc-ind_L] += 1
+            ind_N -= 1
+        else
+            ind_L -= 1
+        end
+    end       
+end
+#c ---------------------------------------------
+#c Returns the many body state bi at position in
+#c ---------------------------------------------
+#c original from A. V. Ponomarev (2009)
+#subroutine b2in(bi,in)
+function b2in(bi::Vector{Int64},cnkc::Array{Int64,2},jmax::Int64,lc::Int64,nc::Int64)
+    inn=1
+    for indi=1:lc-2
+        for ind_N=0:bi[indi]
+            if (bi[indi]-ind_N>0) 
+                suma=0
+                for k=1:indi-1
+                    suma=suma+bi[k]
+                end
+                if (lc-indi>0) && (nc-ind_N-suma>0) 
+                    is=0
+                    inn+=cnkc[lc-indi,nc-ind_N-suma]
+                end
+            end
+        end
+    end
+    return inn
+end
+
+function Get_ket_leader(ket::Int64,L::Int64,M::Int64)
+    #ket_leader::Int64
+    CycleMembs=zeros(Int64, L*2)
+    CycleMembs[1]= ket
+    ket_rev=ReverseKet(ket,M) #M=L+N
+    CycleMembs[L+1]= ket_rev
+    for  k= 2:L
+        ket = shiftV(ket,M)
+        ket_rev = shiftV(ket_rev,M)
+        CycleMembs[k]= ket
+        CycleMembs[L+k]= ket_rev
+    end
+    ket_leader = maximum(CycleMembs)
+    return ket_leader
+end
+
+function Get_ket_leader_OTF(Nv::Vector{Int64},L::Int64,N::Int64,jmax::Int64,cnkc::Array{Int,2})
+    lc=L+1
+    nc=N+1
+    CycleMembs=zeros(Int64, L*2)
+    ket =b2in(Nv,cnkc,jmax,lc,nc)
+    CycleMembs[1]= ket
+    Nv_rev=copy(Nv)
+    Nv_temp=copy(Nv)
+    reverse!(Nv_rev)
+    ket_rev = b2in(Nv_rev,cnkc,jmax,lc,nc)
+    CycleMembs[L+1]= ket_rev
+    for  k= 2:L
+        circshift!(Nv_temp, Nv,1)
+        Nv_temp, Nv = Nv,Nv_temp
+        ket = b2in(Nv,cnkc,jmax,lc,nc)
+        CycleMembs[k]= ket
+        circshift!(Nv_temp, Nv_rev,1)
+        Nv_temp, Nv_rev = Nv_rev,Nv_temp
+        ket_rev = b2in(Nv_rev,cnkc,jmax,lc,nc)
+        CycleMembs[L+k]= ket_rev
+    end
+    ket_leader = minimum(CycleMembs)
+    return ket_leader
+end
+
